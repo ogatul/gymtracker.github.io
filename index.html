@@ -4,94 +4,169 @@
   <title>Gym Tracker</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- PDF LIBRARY -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
   <style>
     body {
-      background:black;
-      color:white;
-      font-family:Arial;
-      text-align:center;
-      padding:20px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI';
+      background: #0f0f0f;
+      color: #fff;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      font-weight: 500;
+      letter-spacing: 1px;
+    }
+
+    .container {
+      max-width: 450px;
+      margin: auto;
+    }
+
+    /* BUTTONS */
+    .btn-group {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 15px;
     }
 
     button {
-      padding:10px;
-      margin:5px;
-      border:1px solid white;
-      background:white;
-      color:black;
-      cursor:pointer;
+      flex: 1;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid #333;
+      background: #1a1a1a;
+      color: white;
+      cursor: pointer;
+      transition: 0.2s;
     }
 
-    button.active {
-      background:black;
-      color:white;
+    button:hover {
+      background: #2a2a2a;
+    }
+
+    .active {
+      background: #ffffff;
+      color: #000;
+    }
+
+    /* INPUT CARD */
+    .card {
+      background: #1a1a1a;
+      padding: 15px;
+      border-radius: 12px;
+      margin-bottom: 15px;
+      border: 1px solid #2a2a2a;
     }
 
     input {
-      padding:8px;
-      margin:5px;
-      border:1px solid white;
-      background:black;
-      color:white;
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      border-radius: 8px;
+      border: 1px solid #333;
+      background: #0f0f0f;
+      color: white;
     }
 
-    .card {
-      border:1px solid white;
-      margin:10px auto;
-      padding:10px;
-      max-width:400px;
-      text-align:left;
+    .row {
+      display: flex;
+      gap: 8px;
     }
 
-    .small {
-      padding:5px;
-      font-size:12px;
+    .row input {
+      flex: 1;
     }
+
+    .main-btn {
+      width: 100%;
+      margin-top: 10px;
+      background: white;
+      color: black;
+      font-weight: 500;
+    }
+
+    /* ENTRY */
+    .entry {
+      background: #141414;
+      border: 1px solid #2a2a2a;
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+
+    .entry-title {
+      font-weight: 500;
+    }
+
+    .entry-sub {
+      font-size: 13px;
+      color: #aaa;
+      margin-top: 3px;
+    }
+
+    .entry-actions {
+      margin-top: 8px;
+    }
+
+    .small-btn {
+      padding: 5px 8px;
+      font-size: 12px;
+      margin-right: 5px;
+    }
+
+    .top-buttons {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
   </style>
 </head>
 
 <body>
 
-<h1>GYM TRACKER</h1>
+<div class="container">
+
+<h1>Gym Tracker</h1>
 
 <!-- DAY -->
-<div>
-  <button onclick="setDay('push')" id="pushBtn">PUSH</button>
-  <button onclick="setDay('pull')" id="pullBtn">PULL</button>
-  <button onclick="setDay('legs')" id="legsBtn">LEGS</button>
+<div class="btn-group">
+  <button onclick="setDay('push')" id="pushBtn">Push</button>
+  <button onclick="setDay('pull')" id="pullBtn">Pull</button>
+  <button onclick="setDay('legs')" id="legsBtn">Legs</button>
 </div>
 
-<!-- OPTIONS -->
-<div>
-  <button onclick="toggleAll()">VIEW ALL</button>
-  <button onclick="downloadPDF()">DOWNLOAD PDF</button>
+<!-- ACTION -->
+<div class="top-buttons">
+  <button onclick="toggleAll()">View All</button>
+  <button onclick="downloadPDF()">PDF</button>
 </div>
 
-<!-- DATE FILTER -->
-<div>
+<!-- FILTER -->
+<div class="card">
   <input type="date" id="startDate">
   <input type="date" id="endDate">
-  <button onclick="applyFilter()">FILTER</button>
+  <button class="main-btn" onclick="applyFilter()">Apply Filter</button>
 </div>
-
-<h2 id="title">SELECT DAY</h2>
-<p id="date"></p>
 
 <!-- INPUT -->
-<div>
+<div class="card">
   <input id="ex" placeholder="Exercise">
-  <input id="w" placeholder="Weight">
-  <input id="r" placeholder="Reps">
-  <br>
-  <button onclick="add()">ADD</button>
+  <div class="row">
+    <input id="w" placeholder="Weight">
+    <input id="r" placeholder="Reps">
+  </div>
+  <button class="main-btn" onclick="add()">Add Entry</button>
 </div>
 
-<hr>
-
+<!-- OUTPUT -->
 <div id="output"></div>
+
+</div>
 
 <script>
 let data = JSON.parse(localStorage.getItem("gymData")) || [];
@@ -99,14 +174,16 @@ let currentDay = "";
 let showAll = false;
 let filteredData = [];
 
-// DATE
-document.getElementById("date").innerText = new Date().toDateString();
-
-// SELECT DAY
+// SET DAY
 function setDay(day) {
   currentDay = day;
   showAll = false;
-  document.getElementById("title").innerText = day.toUpperCase();
+
+  ["push","pull","legs"].forEach(d=>{
+    document.getElementById(d+"Btn").classList.remove("active");
+  });
+  document.getElementById(day+"Btn").classList.add("active");
+
   show();
 }
 
@@ -118,14 +195,12 @@ function add() {
   let w = document.getElementById("w").value;
   let r = document.getElementById("r").value;
 
-  if (!ex || !w || !r) return alert("Fill all fields");
+  if (!ex || !w || !r) return alert("Fill all");
 
   data.push({
     id: Date.now(),
     day: currentDay,
-    ex,
-    w,
-    r,
+    ex, w, r,
     date: new Date().toISOString().split("T")[0]
   });
 
@@ -138,100 +213,81 @@ function add() {
   show();
 }
 
-// FILTER
-function applyFilter() {
-  let start = document.getElementById("startDate").value;
-  let end = document.getElementById("endDate").value;
-
-  filteredData = data.filter(e => {
-    return (!start || e.date >= start) && (!end || e.date <= end);
-  });
-
-  show(filteredData);
-}
-
 // SHOW
 function show(custom) {
   let out = document.getElementById("output");
   out.innerHTML = "";
 
-  let list = custom || (showAll ? data : data.filter(e => e.day === currentDay));
+  let list = custom || (showAll ? data : data.filter(e=>e.day===currentDay));
 
-  list = list.sort((a,b) => new Date(b.date) - new Date(a.date));
+  list = list.sort((a,b)=>new Date(b.date)-new Date(a.date));
 
-  if (list.length === 0) {
-    out.innerHTML = "<p>No data</p>";
-    return;
-  }
-
-  list.forEach(e => {
+  list.forEach(e=>{
     out.innerHTML += `
-      <div class="card">
-        <strong>${e.day.toUpperCase()}</strong> - ${e.date}<br>
-        ${e.ex}<br>
-        ${e.w} kg × ${e.r}
-        <br>
-        <button class="small" onclick="edit(${e.id})">EDIT</button>
-        <button class="small" onclick="del(${e.id})">DELETE</button>
+      <div class="entry">
+        <div class="entry-title">${e.ex}</div>
+        <div class="entry-sub">${e.day.toUpperCase()} • ${e.w}kg × ${e.r} • ${e.date}</div>
+        <div class="entry-actions">
+          <button class="small-btn" onclick="edit(${e.id})">Edit</button>
+          <button class="small-btn" onclick="del(${e.id})">Delete</button>
+        </div>
       </div>
     `;
   });
 }
 
+// FILTER
+function applyFilter() {
+  let s = document.getElementById("startDate").value;
+  let e = document.getElementById("endDate").value;
+
+  filteredData = data.filter(x => (!s || x.date>=s) && (!e || x.date<=e));
+  show(filteredData);
+}
+
+// TOGGLE
+function toggleAll() {
+  showAll = !showAll;
+  show();
+}
+
 // DELETE
-function del(id) {
-  data = data.filter(e => e.id !== id);
+function del(id){
+  data = data.filter(x=>x.id!==id);
   localStorage.setItem("gymData", JSON.stringify(data));
   show();
 }
 
 // EDIT
-function edit(id) {
-  let item = data.find(e => e.id === id);
+function edit(id){
+  let item = data.find(x=>x.id===id);
 
   let ex = prompt("Exercise:", item.ex);
   let w = prompt("Weight:", item.w);
   let r = prompt("Reps:", item.r);
 
-  if (!ex || !w || !r) return;
+  if(!ex||!w||!r) return;
 
-  item.ex = ex;
-  item.w = w;
-  item.r = r;
+  item.ex=ex; item.w=w; item.r=r;
 
   localStorage.setItem("gymData", JSON.stringify(data));
   show();
 }
 
-// PDF DOWNLOAD (FIXED)
-function downloadPDF() {
+// PDF
+function downloadPDF(){
   const { jsPDF } = window.jspdf;
   let pdf = new jsPDF();
 
   let list = filteredData.length ? filteredData : data;
 
-  if (list.length === 0) {
-    alert("No data to export");
-    return;
-  }
-
-  let y = 10;
-
-  list.forEach((e, i) => {
-    pdf.text(
-      `${i+1}. ${e.day.toUpperCase()} | ${e.ex} | ${e.w}kg x ${e.r} | ${e.date}`,
-      10,
-      y
-    );
-    y += 10;
-
-    if (y > 280) {
-      pdf.addPage();
-      y = 10;
-    }
+  let y=10;
+  list.forEach((e,i)=>{
+    pdf.text(`${i+1}. ${e.day} - ${e.ex} - ${e.w}kg x ${e.r} - ${e.date}`,10,y);
+    y+=10;
   });
 
-  pdf.save("gym-data.pdf");
+  pdf.save("gym.pdf");
 }
 </script>
 
