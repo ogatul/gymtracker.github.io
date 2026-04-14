@@ -1,72 +1,65 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gym Tracker</title>
+  <title>Gym Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<style>
-body {
-  font-family: Arial;
-  background: black;
-  color: white;
-  padding: 20px;
-  text-align: center;
-}
+  <style>
+    body { background:black; color:white; font-family:Arial; text-align:center; padding:20px; }
 
-h1 { margin-bottom: 10px; }
+    button {
+      padding:10px; margin:5px;
+      border:1px solid white;
+      background:white; color:black;
+      cursor:pointer;
+    }
 
-button {
-  padding: 10px;
-  margin: 5px;
-  border: 1px solid white;
-  background: white;
-  color: black;
-  cursor: pointer;
-}
+    button.active { background:black; color:white; }
 
-button.active {
-  background: black;
-  color: white;
-}
+    input {
+      padding:8px; margin:5px;
+      border:1px solid white;
+      background:black; color:white;
+    }
 
-input {
-  padding: 10px;
-  margin: 5px;
-  border: 1px solid white;
-  background: black;
-  color: white;
-}
+    .card {
+      border:1px solid white;
+      margin:10px auto;
+      padding:10px;
+      max-width:400px;
+      text-align:left;
+    }
 
-.card {
-  border: 1px solid white;
-  padding: 10px;
-  margin: 10px auto;
-  max-width: 400px;
-  text-align: left;
-}
-
-.small {
-  padding: 5px;
-  font-size: 12px;
-}
-</style>
+    .small { padding:5px; font-size:12px; }
+  </style>
 </head>
 
 <body>
 
 <h1>GYM TRACKER</h1>
 
-<!-- DAY BUTTONS -->
+<!-- DAY -->
 <div>
   <button onclick="setDay('push')" id="pushBtn">PUSH</button>
   <button onclick="setDay('pull')" id="pullBtn">PULL</button>
   <button onclick="setDay('legs')" id="legsBtn">LEGS</button>
 </div>
 
-<!-- VIEW ALL -->
+<!-- HISTORY -->
 <div>
   <button onclick="toggleAll()">VIEW ALL</button>
+</div>
+
+<!-- DATE FILTER -->
+<div>
+  <input type="date" id="startDate">
+  <input type="date" id="endDate">
+  <button onclick="applyFilter()">FILTER</button>
+</div>
+
+<!-- DOWNLOAD -->
+<div>
+  <button onclick="downloadData()">DOWNLOAD FILTERED</button>
 </div>
 
 <h2 id="title">SELECT DAY</h2>
@@ -89,6 +82,7 @@ input {
 let data = JSON.parse(localStorage.getItem("gymData")) || [];
 let currentDay = "";
 let showAll = false;
+let filteredData = [];
 
 // DATE
 document.getElementById("date").innerText = new Date().toDateString();
@@ -109,35 +103,27 @@ function setDay(day) {
   show();
 }
 
-// TOGGLE ALL HISTORY
+// VIEW ALL
 function toggleAll() {
   showAll = !showAll;
   show();
 }
 
-// ADD ENTRY
+// ADD
 function add() {
-  if (!currentDay) {
-    alert("Select day first");
-    return;
-  }
+  if (!currentDay) return alert("Select day first");
 
   let ex = document.getElementById("ex").value;
   let w = document.getElementById("w").value;
   let r = document.getElementById("r").value;
 
-  if (!ex || !w || !r) {
-    alert("Fill all fields");
-    return;
-  }
+  if (!ex || !w || !r) return alert("Fill all fields");
 
   data.push({
     id: Date.now(),
     day: currentDay,
-    ex: ex,
-    w: w,
-    r: r,
-    date: new Date().toDateString()
+    ex, w, r,
+    date: new Date().toISOString().split("T")[0] // YYYY-MM-DD (important)
   });
 
   localStorage.setItem("gymData", JSON.stringify(data));
@@ -149,19 +135,40 @@ function add() {
   show();
 }
 
-// SHOW DATA
-function show() {
+// FILTER
+function applyFilter() {
+  let start = document.getElementById("startDate").value;
+  let end = document.getElementById("endDate").value;
+
+  filteredData = data.filter(e => {
+    return (!start || e.date >= start) && (!end || e.date <= end);
+  });
+
+  show(filteredData);
+}
+
+// SHOW
+function show(customData) {
   let out = document.getElementById("output");
   out.innerHTML = "";
 
-  let list = showAll ? data : data.filter(e => e.day === currentDay);
+  let list;
+
+  if (customData) {
+    list = customData;
+  } else {
+    list = showAll ? data : data.filter(e => e.day === currentDay);
+  }
+
+  // SORT BY DATE (latest first)
+  list = list.sort((a,b) => new Date(b.date) - new Date(a.date));
 
   if (list.length === 0) {
     out.innerHTML = "<p>No data</p>";
     return;
   }
 
-  list.slice().reverse().forEach(e => {
+  list.forEach(e => {
     out.innerHTML += `
       <div class="card">
         <strong>${e.day.toUpperCase()}</strong><br>
@@ -199,6 +206,20 @@ function edit(id) {
 
   localStorage.setItem("gymData", JSON.stringify(data));
   show();
+}
+
+// DOWNLOAD FILTERED
+function downloadData() {
+  let toDownload = filteredData.length ? filteredData : data;
+
+  let blob = new Blob([JSON.stringify(toDownload, null, 2)], {
+    type: "application/json"
+  });
+
+  let a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "gym-data.json";
+  a.click();
 }
 </script>
 
