@@ -4,22 +4,38 @@
   <title>Gym Tracker</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <!-- PDF LIBRARY -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
   <style>
-    body { background:black; color:white; font-family:Arial; text-align:center; padding:20px; }
+    body {
+      background:black;
+      color:white;
+      font-family:Arial;
+      text-align:center;
+      padding:20px;
+    }
 
     button {
-      padding:10px; margin:5px;
+      padding:10px;
+      margin:5px;
       border:1px solid white;
-      background:white; color:black;
+      background:white;
+      color:black;
       cursor:pointer;
     }
 
-    button.active { background:black; color:white; }
+    button.active {
+      background:black;
+      color:white;
+    }
 
     input {
-      padding:8px; margin:5px;
+      padding:8px;
+      margin:5px;
       border:1px solid white;
-      background:black; color:white;
+      background:black;
+      color:white;
     }
 
     .card {
@@ -30,7 +46,10 @@
       text-align:left;
     }
 
-    .small { padding:5px; font-size:12px; }
+    .small {
+      padding:5px;
+      font-size:12px;
+    }
   </style>
 </head>
 
@@ -45,9 +64,10 @@
   <button onclick="setDay('legs')" id="legsBtn">LEGS</button>
 </div>
 
-<!-- HISTORY -->
+<!-- OPTIONS -->
 <div>
   <button onclick="toggleAll()">VIEW ALL</button>
+  <button onclick="downloadPDF()">DOWNLOAD PDF</button>
 </div>
 
 <!-- DATE FILTER -->
@@ -55,11 +75,6 @@
   <input type="date" id="startDate">
   <input type="date" id="endDate">
   <button onclick="applyFilter()">FILTER</button>
-</div>
-
-<!-- DOWNLOAD -->
-<div>
-  <button onclick="downloadData()">DOWNLOAD FILTERED</button>
 </div>
 
 <h2 id="title">SELECT DAY</h2>
@@ -91,21 +106,7 @@ document.getElementById("date").innerText = new Date().toDateString();
 function setDay(day) {
   currentDay = day;
   showAll = false;
-
   document.getElementById("title").innerText = day.toUpperCase();
-
-  document.getElementById("pushBtn").classList.remove("active");
-  document.getElementById("pullBtn").classList.remove("active");
-  document.getElementById("legsBtn").classList.remove("active");
-
-  document.getElementById(day + "Btn").classList.add("active");
-
-  show();
-}
-
-// VIEW ALL
-function toggleAll() {
-  showAll = !showAll;
   show();
 }
 
@@ -122,8 +123,10 @@ function add() {
   data.push({
     id: Date.now(),
     day: currentDay,
-    ex, w, r,
-    date: new Date().toISOString().split("T")[0] // YYYY-MM-DD (important)
+    ex,
+    w,
+    r,
+    date: new Date().toISOString().split("T")[0]
   });
 
   localStorage.setItem("gymData", JSON.stringify(data));
@@ -148,19 +151,12 @@ function applyFilter() {
 }
 
 // SHOW
-function show(customData) {
+function show(custom) {
   let out = document.getElementById("output");
   out.innerHTML = "";
 
-  let list;
+  let list = custom || (showAll ? data : data.filter(e => e.day === currentDay));
 
-  if (customData) {
-    list = customData;
-  } else {
-    list = showAll ? data : data.filter(e => e.day === currentDay);
-  }
-
-  // SORT BY DATE (latest first)
   list = list.sort((a,b) => new Date(b.date) - new Date(a.date));
 
   if (list.length === 0) {
@@ -171,10 +167,9 @@ function show(customData) {
   list.forEach(e => {
     out.innerHTML += `
       <div class="card">
-        <strong>${e.day.toUpperCase()}</strong><br>
+        <strong>${e.day.toUpperCase()}</strong> - ${e.date}<br>
         ${e.ex}<br>
-        ${e.w} kg × ${e.r}<br>
-        📅 ${e.date}
+        ${e.w} kg × ${e.r}
         <br>
         <button class="small" onclick="edit(${e.id})">EDIT</button>
         <button class="small" onclick="del(${e.id})">DELETE</button>
@@ -208,18 +203,35 @@ function edit(id) {
   show();
 }
 
-// DOWNLOAD FILTERED
-function downloadData() {
-  let toDownload = filteredData.length ? filteredData : data;
+// PDF DOWNLOAD (FIXED)
+function downloadPDF() {
+  const { jsPDF } = window.jspdf;
+  let pdf = new jsPDF();
 
-  let blob = new Blob([JSON.stringify(toDownload, null, 2)], {
-    type: "application/json"
+  let list = filteredData.length ? filteredData : data;
+
+  if (list.length === 0) {
+    alert("No data to export");
+    return;
+  }
+
+  let y = 10;
+
+  list.forEach((e, i) => {
+    pdf.text(
+      `${i+1}. ${e.day.toUpperCase()} | ${e.ex} | ${e.w}kg x ${e.r} | ${e.date}`,
+      10,
+      y
+    );
+    y += 10;
+
+    if (y > 280) {
+      pdf.addPage();
+      y = 10;
+    }
   });
 
-  let a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "gym-data.json";
-  a.click();
+  pdf.save("gym-data.pdf");
 }
 </script>
 
