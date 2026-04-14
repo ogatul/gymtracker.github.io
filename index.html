@@ -1,179 +1,206 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Gym Tracker</title>
+
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --color-bg: #ffffff;
-    --color-bg-secondary: #f5f5f4;
-    --color-text-primary: #1a1a1a;
-    --color-text-secondary: #6b6b6b;
-    --color-text-tertiary: #a8a8a8;
-    --color-border: rgba(0,0,0,0.12);
-    --color-border-md: rgba(0,0,0,0.25);
-    --radius-md: 8px;
-    --radius-lg: 12px;
-    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --color-bg: #1c1c1e;
-      --color-bg-secondary: #2c2c2e;
-      --color-text-primary: #f0f0f0;
-      --color-text-secondary: #a0a0a0;
-      --color-text-tertiary: #666;
-      --color-border: rgba(255,255,255,0.1);
-      --color-border-md: rgba(255,255,255,0.25);
-    }
-  }
-  body { font-family: var(--font); background: var(--color-bg); color: var(--color-text-primary); min-height: 100vh; }
-  .wrap { padding: 1.5rem 1rem; max-width: 480px; margin: 0 auto; }
-  h1 { font-size: 22px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 4px; }
-  .date-line { font-size: 13px; color: var(--color-text-secondary); margin-bottom: 1.5rem; }
-  .day-btns { display: flex; gap: 8px; margin-bottom: 1.5rem; }
-  .day-btn { flex: 1; padding: 10px; border-radius: var(--radius-md); border: 0.5px solid var(--color-border-md); background: var(--color-bg); color: var(--color-text-primary); font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.15s; font-family: var(--font); }
-  .day-btn:hover { background: var(--color-bg-secondary); }
-  .day-btn.active-push { background: #EEEDFE; border-color: #534AB7; color: #3C3489; }
-  .day-btn.active-pull { background: #E1F5EE; border-color: #0F6E56; color: #085041; }
-  .day-btn.active-legs { background: #FAECE7; border-color: #993C1D; color: #712B13; }
-  .form-card { background: var(--color-bg-secondary); border-radius: var(--radius-lg); padding: 1rem 1.25rem; margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 10px; }
-  .form-row { display: flex; gap: 8px; }
-  .form-row input { flex: 1; min-width: 0; }
-  input { width: 100%; padding: 9px 12px; border-radius: var(--radius-md); border: 0.5px solid var(--color-border-md); background: var(--color-bg); color: var(--color-text-primary); font-size: 14px; font-family: var(--font); outline: none; transition: border-color 0.15s; }
-  input:focus { border-color: #534AB7; }
-  input::placeholder { color: var(--color-text-tertiary); }
-  .btn-row { display: flex; gap: 8px; }
-  .btn-add { flex: 1; padding: 10px; border-radius: var(--radius-md); border: none; background: var(--color-text-primary); color: var(--color-bg); font-size: 14px; font-weight: 500; cursor: pointer; font-family: var(--font); }
-  .btn-add:hover { opacity: 0.85; }
-  .btn-view { flex: 1; padding: 10px; border-radius: var(--radius-md); border: 0.5px solid var(--color-border-md); background: var(--color-bg); color: var(--color-text-primary); font-size: 14px; cursor: pointer; font-family: var(--font); }
-  .btn-view:hover { background: var(--color-bg-secondary); }
-  .btn-view.active { background: var(--color-bg-secondary); border-color: var(--color-border-md); }
-  .section-label { font-size: 12px; font-weight: 500; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; }
-  .entry-card { background: var(--color-bg); border: 0.5px solid var(--color-border); border-radius: var(--radius-md); padding: 12px 14px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; }
-  .entry-badge { font-size: 11px; font-weight: 500; padding: 3px 8px; border-radius: 20px; white-space: nowrap; }
-  .badge-push { background: #EEEDFE; color: #3C3489; }
-  .badge-pull { background: #E1F5EE; color: #085041; }
-  .badge-legs { background: #FAECE7; color: #712B13; }
-  .entry-info { flex: 1; min-width: 0; }
-  .entry-ex { font-size: 14px; font-weight: 500; color: var(--color-text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .entry-detail { font-size: 13px; color: var(--color-text-secondary); margin-top: 2px; }
-  .entry-date { font-size: 12px; color: var(--color-text-tertiary); white-space: nowrap; }
-  .delete-btn { background: none; border: none; color: var(--color-text-tertiary); cursor: pointer; font-size: 18px; padding: 4px 6px; line-height: 1; border-radius: 4px; }
-  .delete-btn:hover { color: #E24B4A; background: #FCEBEB; }
-  .empty { text-align: center; color: var(--color-text-secondary); font-size: 14px; padding: 2rem 0; }
-  .toast { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%); background: var(--color-text-primary); color: var(--color-bg); font-size: 13px; padding: 8px 16px; border-radius: 20px; opacity: 0; transition: opacity 0.2s; pointer-events: none; z-index: 99; white-space: nowrap; }
-  .toast.show { opacity: 1; }
+body {
+  font-family: Arial;
+  background: black;
+  color: white;
+  padding: 20px;
+  text-align: center;
+}
+
+h1 { margin-bottom: 10px; }
+
+button {
+  padding: 10px;
+  margin: 5px;
+  border: 1px solid white;
+  background: white;
+  color: black;
+  cursor: pointer;
+}
+
+button.active {
+  background: black;
+  color: white;
+}
+
+input {
+  padding: 10px;
+  margin: 5px;
+  border: 1px solid white;
+  background: black;
+  color: white;
+}
+
+.card {
+  border: 1px solid white;
+  padding: 10px;
+  margin: 10px auto;
+  max-width: 400px;
+  text-align: left;
+}
+
+.small {
+  padding: 5px;
+  font-size: 12px;
+}
 </style>
 </head>
+
 <body>
-<div class="wrap">
-  <h1>Gym tracker</h1>
-  <p class="date-line" id="date-line"></p>
-  <div class="day-btns">
-    <button class="day-btn" id="btn-push" onclick="setDay('push')">Push</button>
-    <button class="day-btn" id="btn-pull" onclick="setDay('pull')">Pull</button>
-    <button class="day-btn" id="btn-legs" onclick="setDay('legs')">Legs</button>
-  </div>
-  <div class="form-card">
-    <input id="ex" placeholder="Exercise (e.g. Bench press)" />
-    <div class="form-row">
-      <input id="w" placeholder="Weight (kg)" type="number" min="0" step="0.5" />
-      <input id="r" placeholder="Reps" type="number" min="1" step="1" />
-    </div>
-    <div class="btn-row">
-      <button class="btn-add" onclick="addEntry()">Add set</button>
-      <button class="btn-view" id="btn-all" onclick="toggleAll()">View all</button>
-    </div>
-  </div>
-  <div id="output"></div>
+
+<h1>GYM TRACKER</h1>
+
+<!-- DAY BUTTONS -->
+<div>
+  <button onclick="setDay('push')" id="pushBtn">PUSH</button>
+  <button onclick="setDay('pull')" id="pullBtn">PULL</button>
+  <button onclick="setDay('legs')" id="legsBtn">LEGS</button>
 </div>
-<div class="toast" id="toast"></div>
+
+<!-- VIEW ALL -->
+<div>
+  <button onclick="toggleAll()">VIEW ALL</button>
+</div>
+
+<h2 id="title">SELECT DAY</h2>
+<p id="date"></p>
+
+<!-- INPUT -->
+<div>
+  <input id="ex" placeholder="Exercise">
+  <input id="w" placeholder="Weight">
+  <input id="r" placeholder="Reps">
+  <br>
+  <button onclick="add()">ADD</button>
+</div>
+
+<hr>
+
+<div id="output"></div>
+
 <script>
-  let currentDay = '';
-  let showingAll = false;
-  let data = [];
+let data = JSON.parse(localStorage.getItem("gymData")) || [];
+let currentDay = "";
+let showAll = false;
 
-  try { data = JSON.parse(localStorage.getItem('gymData') || '[]'); } catch(e) { data = []; }
+// DATE
+document.getElementById("date").innerText = new Date().toDateString();
 
-  document.getElementById('date-line').textContent = new Date().toDateString();
-  render();
+// SELECT DAY
+function setDay(day) {
+  currentDay = day;
+  showAll = false;
 
-  function setDay(d) {
-    currentDay = d;
-    showingAll = false;
-    document.getElementById('btn-all').classList.remove('active');
-    ['push','pull','legs'].forEach(x => {
-      document.getElementById('btn-'+x).className = 'day-btn' + (x===d ? ' active-'+x : '');
-    });
-    render();
+  document.getElementById("title").innerText = day.toUpperCase();
+
+  document.getElementById("pushBtn").classList.remove("active");
+  document.getElementById("pullBtn").classList.remove("active");
+  document.getElementById("legsBtn").classList.remove("active");
+
+  document.getElementById(day + "Btn").classList.add("active");
+
+  show();
+}
+
+// TOGGLE ALL HISTORY
+function toggleAll() {
+  showAll = !showAll;
+  show();
+}
+
+// ADD ENTRY
+function add() {
+  if (!currentDay) {
+    alert("Select day first");
+    return;
   }
 
-  function toggleAll() {
-    showingAll = !showingAll;
-    document.getElementById('btn-all').classList.toggle('active', showingAll);
-    render();
+  let ex = document.getElementById("ex").value;
+  let w = document.getElementById("w").value;
+  let r = document.getElementById("r").value;
+
+  if (!ex || !w || !r) {
+    alert("Fill all fields");
+    return;
   }
 
-  function addEntry() {
-    if (!currentDay) { toast('Select a day first'); return; }
-    const ex = document.getElementById('ex').value.trim();
-    const w = document.getElementById('w').value.trim();
-    const r = document.getElementById('r').value.trim();
-    if (!ex || !w || !r) { toast('Fill in all fields'); return; }
-    data.push({ id: Date.now(), day: currentDay, ex, w: parseFloat(w), r: parseInt(r), date: new Date().toDateString() });
-    save();
-    document.getElementById('ex').value = '';
-    document.getElementById('w').value = '';
-    document.getElementById('r').value = '';
-    toast('Set added!');
-    render();
+  data.push({
+    id: Date.now(),
+    day: currentDay,
+    ex: ex,
+    w: w,
+    r: r,
+    date: new Date().toDateString()
+  });
+
+  localStorage.setItem("gymData", JSON.stringify(data));
+
+  document.getElementById("ex").value = "";
+  document.getElementById("w").value = "";
+  document.getElementById("r").value = "";
+
+  show();
+}
+
+// SHOW DATA
+function show() {
+  let out = document.getElementById("output");
+  out.innerHTML = "";
+
+  let list = showAll ? data : data.filter(e => e.day === currentDay);
+
+  if (list.length === 0) {
+    out.innerHTML = "<p>No data</p>";
+    return;
   }
 
-  function deleteEntry(id) {
-    data = data.filter(e => e.id !== id);
-    save();
-    render();
-  }
+  list.slice().reverse().forEach(e => {
+    out.innerHTML += `
+      <div class="card">
+        <strong>${e.day.toUpperCase()}</strong><br>
+        ${e.ex}<br>
+        ${e.w} kg × ${e.r}<br>
+        📅 ${e.date}
+        <br>
+        <button class="small" onclick="edit(${e.id})">EDIT</button>
+        <button class="small" onclick="del(${e.id})">DELETE</button>
+      </div>
+    `;
+  });
+}
 
-  function save() {
-    try { localStorage.setItem('gymData', JSON.stringify(data)); } catch(e) {}
-  }
+// DELETE
+function del(id) {
+  data = data.filter(e => e.id !== id);
+  localStorage.setItem("gymData", JSON.stringify(data));
+  show();
+}
 
-  function render() {
-    const out = document.getElementById('output');
-    let entries = showingAll ? [...data].reverse() : data.filter(e => e.day === currentDay).reverse();
-    if (!showingAll && !currentDay) {
-      out.innerHTML = '<p class="empty">Select a day to start logging</p>';
-      return;
-    }
-    if (!entries.length) {
-      out.innerHTML = `<p class="empty">${showingAll ? 'No entries yet' : 'No sets logged for ' + currentDay + ' yet'}</p>`;
-      return;
-    }
-    const label = showingAll ? 'All sessions' : currentDay.charAt(0).toUpperCase()+currentDay.slice(1)+' day';
-    out.innerHTML = `<p class="section-label">${label} — ${entries.length} set${entries.length!==1?'s':''}</p>` +
-      entries.map(e => `
-        <div class="entry-card">
-          <span class="entry-badge badge-${e.day}">${e.day.charAt(0).toUpperCase()+e.day.slice(1)}</span>
-          <div class="entry-info">
-            <div class="entry-ex">${e.ex}</div>
-            <div class="entry-detail">${e.w} kg × ${e.r} rep${e.r!==1?'s':''}</div>
-          </div>
-          <span class="entry-date">${e.date}</span>
-          <button class="delete-btn" onclick="deleteEntry(${e.id})" title="Delete">×</button>
-        </div>
-      `).join('');
-  }
+// EDIT
+function edit(id) {
+  let item = data.find(e => e.id === id);
 
-  function toast(msg) {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 2000);
-  }
+  let ex = prompt("Exercise:", item.ex);
+  let w = prompt("Weight:", item.w);
+  let r = prompt("Reps:", item.r);
+
+  if (!ex || !w || !r) return;
+
+  item.ex = ex;
+  item.w = w;
+  item.r = r;
+
+  localStorage.setItem("gymData", JSON.stringify(data));
+  show();
+}
 </script>
+
 </body>
 </html>
