@@ -1,7 +1,7 @@
 self.addEventListener("install", e => {
   e.waitUntil(
     caches.open("gym-cache").then(cache => {
-      return cache.addAll(["index.html","manifest.json"]);
+      return cache.addAll(["index.html","icon.png"]);
     })
   );
 });
