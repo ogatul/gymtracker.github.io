@@ -22,6 +22,7 @@
       --accent-glow: rgba(0, 122, 255, 0.5);
       --bg-dark: #050505;
       --success: #34c759;
+      --warning: #ffcc00;
     }
 
     * { box-sizing: border-box; -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; }
@@ -106,6 +107,9 @@
     .flash-success { animation: successPulse 0.5s ease-out; }
     @keyframes successPulse { 50% { border-color: var(--success); } }
 
+    /* EDITING MODE STYLES */
+    .edit-input { height: 40px !important; margin: 5px 0 !important; font-size: 14px !important; }
+
     footer { text-align: center; margin-top: 50px; padding-bottom: 40px; }
     .made-by { font-size: 10px; text-transform: uppercase; letter-spacing: 4px; color: rgba(255,255,255,0.3); margin: 0; }
     .author { font-size: 16px; letter-spacing: 1.5px; font-weight: 600; margin-top: 6px; background: linear-gradient(to right, #fff, rgba(255,255,255,0.3)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
@@ -130,7 +134,7 @@
 
   <div id="inputCard" class="glass">
     <span class="label-text">Log New Activity</span>
-    <input id="ex" placeholder="Exercise (e.g. Bench Press)" spellcheck="false">
+    <input id="ex" placeholder="Exercise" spellcheck="false">
     <div style="display:flex; gap:12px;">
       <input id="w" type="number" placeholder="Weight (kg)">
       <input id="r" type="number" placeholder="Reps">
@@ -159,7 +163,6 @@
 </div>
 
 <script>
-  // LOAD DATA
   let data = JSON.parse(localStorage.getItem("gymData")) || [];
   let currentDay = "";
 
@@ -212,19 +215,57 @@
     list.forEach((e, index) => {
       let div = document.createElement('div');
       div.className = 'entry';
+      div.id = `entry-${e.id}`;
       div.style.animationDelay = `${index * 0.06}s`;
+      
+      // Default view
       div.innerHTML = `
         <span class="date-badge">${e.date}</span>
         <b style="font-size:1.1rem; letter-spacing:-0.3px;">${e.ex}</b>
         <div class="stats">
           ${e.w} <span>kg</span> <span style="margin: 0 4px; color:#222">/</span> ${e.r} <span>reps</span>
         </div>
-        <div style="margin-top:18px;">
+        <div style="margin-top:18px; display:flex; gap:10px;">
+          <button class="tab-btn" style="height:34px; font-size:11px; background:rgba(255,255,255,0.1); color:#fff;" onclick="toggleEdit(${e.id})">Edit</button>
           <button class="tab-btn" style="height:34px; font-size:11px; background:rgba(255,59,48,0.1); color:#ff3b30;" onclick="del(${e.id})">Delete</button>
         </div>
       `;
       out.appendChild(div);
     });
+  }
+
+  function toggleEdit(id) {
+    const entry = data.find(x => x.id === id);
+    const div = document.getElementById(`entry-${id}`);
+    
+    div.innerHTML = `
+      <span class="date-badge">${entry.date}</span>
+      <input type="text" id="edit-ex-${id}" class="edit-input" value="${entry.ex}">
+      <div style="display:flex; gap:10px;">
+        <input type="number" id="edit-w-${id}" class="edit-input" value="${entry.w}" placeholder="kg">
+        <input type="number" id="edit-r-${id}" class="edit-input" value="${entry.r}" placeholder="reps">
+      </div>
+      <div style="margin-top:10px; display:flex; gap:10px;">
+        <button class="tab-btn" style="height:34px; font-size:11px; background:var(--success); color:#000;" onclick="saveEdit(${id})">Update</button>
+        <button class="tab-btn" style="height:34px; font-size:11px; background:rgba(255,255,255,0.1); color:#fff;" onclick="show()">Cancel</button>
+      </div>
+    `;
+  }
+
+  function saveEdit(id) {
+    const newEx = document.getElementById(`edit-ex-${id}`).value;
+    const newW = document.getElementById(`edit-w-${id}`).value;
+    const newR = document.getElementById(`edit-r-${id}`).value;
+
+    if(!newEx || !newW || !newR) return alert("Fields cannot be empty");
+
+    const index = data.findIndex(x => x.id === id);
+    data[index].ex = newEx;
+    data[index].w = newW;
+    data[index].r = newR;
+
+    save();
+    show();
   }
 
   function del(id){
