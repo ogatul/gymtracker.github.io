@@ -1,29 +1,69 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Gym Tracker</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gym App</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="manifest" href="manifest.json">
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
   <style>
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI';
-      background: #0f0f0f;
-      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont;
       margin: 0;
       padding: 20px;
-    }
+      color: white;
 
-    h1 {
-      text-align: center;
-      font-weight: 500;
-      letter-spacing: 1px;
+      /* 🎨 BACKGROUND FOR GLASS */
+      background:
+        radial-gradient(circle at 20% 20%, #3a3a3a, transparent 40%),
+        radial-gradient(circle at 80% 80%, #1f1f1f, transparent 40%),
+        linear-gradient(135deg, #0a0a0a, #1a1a1a);
     }
 
     .container {
       max-width: 450px;
       margin: auto;
+    }
+
+    h1 {
+      text-align: center;
+      font-weight: 500;
+      margin-bottom: 20px;
+    }
+
+    /* 🍎 REAL GLASS */
+    .glass {
+      position: relative;
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(25px) saturate(180%);
+      -webkit-backdrop-filter: blur(25px) saturate(180%);
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.15);
+      padding: 15px;
+      margin-bottom: 15px;
+      overflow: hidden;
+      transition: 0.3s;
+    }
+
+    .glass:hover {
+      transform: scale(1.02);
+    }
+
+    /* ✨ LIGHT REFLECTION */
+    .glass::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        120deg,
+        rgba(255,255,255,0.25),
+        rgba(255,255,255,0.05),
+        transparent
+      );
+      opacity: 0.3;
+      pointer-events: none;
     }
 
     /* BUTTONS */
@@ -36,40 +76,39 @@
     button {
       flex: 1;
       padding: 10px;
-      border-radius: 10px;
-      border: 1px solid #333;
-      background: #1a1a1a;
+      border-radius: 12px;
+      border: none;
+      background: rgba(255,255,255,0.1);
       color: white;
       cursor: pointer;
-      transition: 0.2s;
+      transition: 0.25s ease;
     }
 
     button:hover {
-      background: #2a2a2a;
+      background: rgba(255,255,255,0.2);
+      transform: translateY(-2px);
+    }
+
+    button:active {
+      transform: scale(0.95);
     }
 
     .active {
-      background: #ffffff;
-      color: #000;
+      background: white;
+      color: black;
+      font-weight: 500;
     }
 
-    /* INPUT CARD */
-    .card {
-      background: #1a1a1a;
-      padding: 15px;
-      border-radius: 12px;
-      margin-bottom: 15px;
-      border: 1px solid #2a2a2a;
-    }
-
+    /* INPUT */
     input {
       width: 100%;
       padding: 10px;
       margin: 5px 0;
-      border-radius: 8px;
-      border: 1px solid #333;
-      background: #0f0f0f;
+      border-radius: 12px;
+      border: none;
+      background: rgba(255,255,255,0.1);
       color: white;
+      outline: none;
     }
 
     .row {
@@ -77,51 +116,30 @@
       gap: 8px;
     }
 
-    .row input {
-      flex: 1;
-    }
-
-    .main-btn {
-      width: 100%;
-      margin-top: 10px;
-      background: white;
-      color: black;
-      font-weight: 500;
-    }
-
     /* ENTRY */
     .entry {
-      background: #141414;
-      border: 1px solid #2a2a2a;
-      border-radius: 10px;
+      background: rgba(255,255,255,0.06);
+      backdrop-filter: blur(15px);
+      border-radius: 14px;
       padding: 12px;
       margin-bottom: 10px;
+      animation: fadeIn 0.4s ease;
+      transition: 0.3s;
     }
 
-    .entry-title {
-      font-weight: 500;
+    .entry:hover {
+      transform: translateY(-3px);
     }
 
-    .entry-sub {
-      font-size: 13px;
-      color: #aaa;
-      margin-top: 3px;
-    }
-
-    .entry-actions {
-      margin-top: 8px;
-    }
-
-    .small-btn {
-      padding: 5px 8px;
+    .small {
       font-size: 12px;
-      margin-right: 5px;
+      margin-top: 5px;
+      padding: 5px;
     }
 
-    .top-buttons {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 10px;
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
   </style>
@@ -140,27 +158,22 @@
   <button onclick="setDay('legs')" id="legsBtn">Legs</button>
 </div>
 
-<!-- ACTION -->
-<div class="top-buttons">
-  <button onclick="toggleAll()">View All</button>
-  <button onclick="downloadPDF()">PDF</button>
-</div>
-
-<!-- FILTER -->
-<div class="card">
-  <input type="date" id="startDate">
-  <input type="date" id="endDate">
-  <button class="main-btn" onclick="applyFilter()">Apply Filter</button>
-</div>
-
 <!-- INPUT -->
-<div class="card">
+<div class="glass">
   <input id="ex" placeholder="Exercise">
   <div class="row">
     <input id="w" placeholder="Weight">
     <input id="r" placeholder="Reps">
   </div>
-  <button class="main-btn" onclick="add()">Add Entry</button>
+  <button onclick="add()">Add Entry</button>
+</div>
+
+<!-- FILTER + PDF -->
+<div class="glass">
+  <input type="date" id="start">
+  <input type="date" id="end">
+  <button onclick="filterData()">Filter</button>
+  <button onclick="downloadPDF()">Download PDF</button>
 </div>
 
 <!-- OUTPUT -->
@@ -171,123 +184,111 @@
 <script>
 let data = JSON.parse(localStorage.getItem("gymData")) || [];
 let currentDay = "";
-let showAll = false;
-let filteredData = [];
+let filtered = [];
 
-// SET DAY
-function setDay(day) {
-  currentDay = day;
-  showAll = false;
+// DAY SELECT
+function setDay(d){
+  currentDay = d;
 
-  ["push","pull","legs"].forEach(d=>{
-    document.getElementById(d+"Btn").classList.remove("active");
+  ["push","pull","legs"].forEach(x=>{
+    document.getElementById(x+"Btn").classList.remove("active");
   });
-  document.getElementById(day+"Btn").classList.add("active");
+  document.getElementById(d+"Btn").classList.add("active");
 
   show();
 }
 
 // ADD
-function add() {
-  if (!currentDay) return alert("Select day first");
+function add(){
+  if(!currentDay) return alert("Select day");
 
-  let ex = document.getElementById("ex").value;
-  let w = document.getElementById("w").value;
-  let r = document.getElementById("r").value;
-
-  if (!ex || !w || !r) return alert("Fill all");
+  let ex = val("ex"), w = val("w"), r = val("r");
+  if(!ex||!w||!r) return alert("Fill all");
 
   data.push({
     id: Date.now(),
     day: currentDay,
-    ex, w, r,
+    ex,w,r,
     date: new Date().toISOString().split("T")[0]
   });
 
-  localStorage.setItem("gymData", JSON.stringify(data));
-
-  document.getElementById("ex").value = "";
-  document.getElementById("w").value = "";
-  document.getElementById("r").value = "";
-
+  save();
+  clear();
   show();
 }
 
+// FILTER
+function filterData(){
+  let s = val("start"), e = val("end");
+
+  filtered = data.filter(x=>
+    (!s||x.date>=s)&&(!e||x.date<=e)
+  );
+
+  show(filtered);
+}
+
 // SHOW
-function show(custom) {
+function show(custom){
   let out = document.getElementById("output");
-  out.innerHTML = "";
+  out.innerHTML="";
 
-  let list = custom || (showAll ? data : data.filter(e=>e.day===currentDay));
+  let list = custom || data.filter(x=>x.day===currentDay);
 
-  list = list.sort((a,b)=>new Date(b.date)-new Date(a.date));
+  list.sort((a,b)=>new Date(b.date)-new Date(a.date));
 
   list.forEach(e=>{
-    out.innerHTML += `
+    out.innerHTML+=`
       <div class="entry">
-        <div class="entry-title">${e.ex}</div>
-        <div class="entry-sub">${e.day.toUpperCase()} • ${e.w}kg × ${e.r} • ${e.date}</div>
-        <div class="entry-actions">
-          <button class="small-btn" onclick="edit(${e.id})">Edit</button>
-          <button class="small-btn" onclick="del(${e.id})">Delete</button>
-        </div>
+        <b>${e.ex}</b><br>
+        ${e.w}kg × ${e.r}<br>
+        ${e.date}
+        <br>
+        <button class="small" onclick="edit(${e.id})">Edit</button>
+        <button class="small" onclick="del(${e.id})">Delete</button>
       </div>
     `;
   });
 }
 
-// FILTER
-function applyFilter() {
-  let s = document.getElementById("startDate").value;
-  let e = document.getElementById("endDate").value;
-
-  filteredData = data.filter(x => (!s || x.date>=s) && (!e || x.date<=e));
-  show(filteredData);
-}
-
-// TOGGLE
-function toggleAll() {
-  showAll = !showAll;
-  show();
+// EDIT
+function edit(id){
+  let i=data.find(x=>x.id===id);
+  let ex=prompt("Exercise:",i.ex);
+  let w=prompt("Weight:",i.w);
+  let r=prompt("Reps:",i.r);
+  if(!ex||!w||!r) return;
+  i.ex=ex;i.w=w;i.r=r;
+  save(); show();
 }
 
 // DELETE
 function del(id){
-  data = data.filter(x=>x.id!==id);
-  localStorage.setItem("gymData", JSON.stringify(data));
-  show();
-}
-
-// EDIT
-function edit(id){
-  let item = data.find(x=>x.id===id);
-
-  let ex = prompt("Exercise:", item.ex);
-  let w = prompt("Weight:", item.w);
-  let r = prompt("Reps:", item.r);
-
-  if(!ex||!w||!r) return;
-
-  item.ex=ex; item.w=w; item.r=r;
-
-  localStorage.setItem("gymData", JSON.stringify(data));
-  show();
+  data=data.filter(x=>x.id!==id);
+  save(); show();
 }
 
 // PDF
 function downloadPDF(){
   const { jsPDF } = window.jspdf;
   let pdf = new jsPDF();
-
-  let list = filteredData.length ? filteredData : data;
-
+  let list = filtered.length?filtered:data;
   let y=10;
   list.forEach((e,i)=>{
-    pdf.text(`${i+1}. ${e.day} - ${e.ex} - ${e.w}kg x ${e.r} - ${e.date}`,10,y);
+    pdf.text(`${i+1}. ${e.ex} ${e.w}kg x ${e.r} ${e.date}`,10,y);
     y+=10;
   });
-
   pdf.save("gym.pdf");
+}
+
+// HELPERS
+function val(id){return document.getElementById(id).value}
+function clear(){["ex","w","r"].forEach(id=>document.getElementById(id).value="")}
+function save(){localStorage.setItem("gymData",JSON.stringify(data))}
+
+// SERVICE WORKER
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('service-worker.js');
 }
 </script>
 
